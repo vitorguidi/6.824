@@ -86,10 +86,8 @@ type Raft struct {
 	matchIndex []int
 
 	//Channels
-	chanApply       chan ApplyMsg
-	chanVote        chan bool
-	chanHeartbeat   chan bool
-	chanWinElection chan bool
+	chanApply     chan ApplyMsg
+	chanHeartbeat chan bool
 }
 
 type LogEntry struct{}
@@ -359,7 +357,7 @@ func (rf *Raft) ticker() {
 		// Your code here to check if a leader election should
 		// be started and to randomize sleeping time using
 		// time.Sleep().
-		delay := time.Duration(200+rand.Intn(300)) * time.Millisecond
+		delay := time.Duration(300+rand.Intn(150)) * time.Millisecond
 		select {
 		case <-rf.chanHeartbeat:
 		case <-time.After(delay):
@@ -375,6 +373,8 @@ func (rf *Raft) ticker() {
 			rf.role = CANDIDATE
 			Dprintf(dWarn, "S%d starting election at term %d", rf.me, rf.currentTerm)
 			rf.mu.Unlock()
+			chanVote := make(chan bool, 100000)
+
 			for i := 0; i < len(rf.peers); i++ {
 				if i == rf.me {
 					continue
@@ -388,16 +388,16 @@ func (rf *Raft) ticker() {
 					ok := rf.sendRequestVote(peer, &args, &reply)
 					if ok && reply.VoteGranted {
 						Dprintf(dWarn, "S%d got vote from S%d on term %d", rf.me, peer, args.Term)
-						rf.chanVote <- true
+						chanVote <- true
 					} else {
 						Dprintf(dWarn, "S%d did not get vote from S%d on term %d", rf.me, peer, args.Term)
-						rf.chanVote <- false
+						chanVote <- false
 					}
 				}(i)
 			}
 			cnt := 1
 			for {
-				ack := <-rf.chanVote
+				ack := <-chanVote
 				cnt++
 				if ack {
 					voteCount++
@@ -421,8 +421,9 @@ func (rf *Raft) leaderLoop() {
 	for {
 		rf.mu.Lock()
 		curTerm := rf.currentTerm
+		role := rf.role
 		rf.mu.Unlock()
-		if rf.role == LEADER {
+		if role == LEADER {
 			for i := 0; i < len(rf.peers); i++ {
 				go func(peer int) {
 					args := AppendEntriesArgs{
@@ -434,7 +435,7 @@ func (rf *Raft) leaderLoop() {
 				}(i)
 			}
 		}
-		time.Sleep(150 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
@@ -464,13 +465,12 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	rf.chanApply = applyCh
 	rf.chanHeartbeat = make(chan bool, 100000)
-	rf.chanVote = make(chan bool, 100000)
 
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
 	// start ticker goroutine to start elections
-	Dprintf(dWarn, "S%d was just created", rf.me)
+	Dprintf(dWarn, "S%d was just created", me)
 	go rf.ticker()
 	go rf.leaderLoop()
 
