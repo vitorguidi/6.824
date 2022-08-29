@@ -375,8 +375,6 @@ func (rf *Raft) ticker() {
 			rf.role = CANDIDATE
 			Dprintf(dWarn, "S%d starting election at term %d", rf.me, rf.currentTerm)
 			rf.mu.Unlock()
-			wg := sync.WaitGroup{}
-			wg.Add(len(rf.peers) - 1)
 			for i := 0; i < len(rf.peers); i++ {
 				if i == rf.me {
 					continue
@@ -388,25 +386,19 @@ func (rf *Raft) ticker() {
 					}
 					reply := RequestVoteReply{}
 					ok := rf.sendRequestVote(peer, &args, &reply)
+					rf.mu.Lock()
 					if ok && reply.VoteGranted {
 						Dprintf(dWarn, "S%d got vote from S%d on term %d", rf.me, peer, args.Term)
-						rf.chanVote <- true
+						voteCount++
 					} else {
 						Dprintf(dWarn, "S%d did not get vote from S%d on term %d", rf.me, peer, args.Term)
-						rf.chanVote <- false
 					}
-					wg.Done()
+					rf.mu.Unlock()
 				}(i)
 			}
-			wg.Wait()
-			for i := 0; i < len(rf.peers)-1; i++ {
-				Dprintf(dWarn, "S%d counting votes on term %d", rf.me, curTerm)
-				result := <-rf.chanVote
-				if result {
-					voteCount++
-				}
-			}
+			time.Sleep(300 * time.Millisecond)
 			rf.mu.Lock()
+			Dprintf(dWarn, "S%d counting votes on term %d: %d", rf.me, curTerm, voteCount)
 			if rf.currentTerm == curTerm && voteCount > len(rf.peers)/2 {
 				rf.role = LEADER
 			}
