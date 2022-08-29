@@ -386,17 +386,26 @@ func (rf *Raft) ticker() {
 					}
 					reply := RequestVoteReply{}
 					ok := rf.sendRequestVote(peer, &args, &reply)
-					rf.mu.Lock()
 					if ok && reply.VoteGranted {
 						Dprintf(dWarn, "S%d got vote from S%d on term %d", rf.me, peer, args.Term)
-						voteCount++
+						rf.chanVote <- true
 					} else {
 						Dprintf(dWarn, "S%d did not get vote from S%d on term %d", rf.me, peer, args.Term)
+						rf.chanVote <- false
 					}
-					rf.mu.Unlock()
 				}(i)
 			}
-			time.Sleep(300 * time.Millisecond)
+			cnt := 1
+			for {
+				ack := <-rf.chanVote
+				cnt++
+				if ack {
+					voteCount++
+				}
+				if cnt == len(rf.peers) || voteCount > len(rf.peers)/2 {
+					break
+				}
+			}
 			rf.mu.Lock()
 			Dprintf(dWarn, "S%d counting votes on term %d: %d", rf.me, curTerm, voteCount)
 			if rf.currentTerm == curTerm && voteCount > len(rf.peers)/2 {
