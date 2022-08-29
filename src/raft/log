@@ -1,0 +1,46 @@
+000000000163 WARN S0 was just created
+000000000312 WARN S1 was just created
+000000000356 WARN S2 was just created
+Test (2A): election after network failure ...
+000000206331 WARN S0 starting election at term 1
+000000206851 WARN S1 (term 0) got vote requested by S0 (term 1), converting to follower
+000000206859 WARN S2 (term 0) got vote requested by S0 (term 1), converting to follower
+000000206878 WARN S2 granting vote for S0 on term 1
+000000206864 WARN S1 granting vote for S0 on term 1
+000000206958 WARN S0 got vote from S1 on term 1
+000000207050 WARN S0 got vote from S2 on term 1
+000000207073 WARN S0 counting votes on term 1
+000000207079 WARN S0 counting votes on term 1
+000000301853 WARN S1 received valid heartbeat from S0 at term 1
+000000302007 WARN S0 received valid heartbeat from S0 at term 1
+000000302016 WARN S2 received valid heartbeat from S0 at term 1
+000000452616 WARN S1 received valid heartbeat from S0 at term 1
+000000452621 WARN S0 received valid heartbeat from S0 at term 1
+000000452628 WARN S2 received valid heartbeat from S0 at term 1
+000000904517 WARN S1 starting election at term 2
+000000904851 WARN S2 (term 1) got vote requested by S1 (term 2), converting to follower
+000000904873 WARN S2 granting vote for S1 on term 2
+000000904981 WARN S1 got vote from S2 on term 2
+000000933022 WARN S2 starting election at term 3
+000000933206 WARN S1 (term 2) got vote requested by S2 (term 3), converting to follower
+000000933216 WARN S1 granting vote for S2 on term 3
+000000933262 WARN S2 got vote from S1 on term 3
+000003019871 WARN S1 did not get vote from S0 on term 2
+000003019939 WARN S1 counting votes on term 2
+000003019949 WARN S1 counting votes on term 2
+000003401537 WARN S1 starting election at term 4
+000003401783 WARN S2 (term 3) got vote requested by S1 (term 4), converting to follower
+000003401803 WARN S2 granting vote for S1 on term 4
+000003401892 WARN S1 got vote from S2 on term 4
+000003704759 WARN S2 did not get vote from S0 on term 3
+000003704853 WARN S2 counting votes on term 3
+000003704863 WARN S2 counting votes on term 3
+000004127531 WARN S2 starting election at term 5
+000004127737 WARN S1 (term 4) got vote requested by S2 (term 5), converting to follower
+000004127743 WARN S1 granting vote for S2 on term 5
+000004127780 WARN S2 got vote from S1 on term 5
+--- FAIL: TestReElection2A (5.48s)
+    config.go:460: expected one leader, got none
+FAIL
+exit status 1
+FAIL	6.824/raft	5.482s

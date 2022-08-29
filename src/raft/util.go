@@ -46,7 +46,7 @@ const (
 )
 
 func init() {
-	Debug = os.Getenv("Debug") != ""
+	Debug = os.Getenv("VERBOSE") != ""
 	debugStart = time.Now()
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 }
